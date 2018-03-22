@@ -1,6 +1,6 @@
 <?php
 
-namespace Berkayk\OneSignal;
+namespace Notificare\OneSignal;
 
 use GuzzleHttp\Client;
 
