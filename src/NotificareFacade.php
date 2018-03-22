@@ -1,13 +1,13 @@
 <?php
 
-namespace Notificare\OneSignal;
+namespace Notificare\Notificare;
 
 use Illuminate\Support\Facades\Facade;
 
-class OneSignalFacade extends Facade {
+class NotificareFacade extends Facade {
 
     protected static function getFacadeAccessor() {
-        return 'onesignal';
+        return 'notificare';
     }
 
 }

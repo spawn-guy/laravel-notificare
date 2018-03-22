@@ -1,12 +1,12 @@
 <?php
 
-namespace Notificare\OneSignal;
+namespace Notificare\Notificare;
 
 use GuzzleHttp\Client;
 
-class OneSignalClient
+class NotificareClient
 {
-    const API_URL = "https://onesignal.com/api/v1";
+    const API_URL = "https://notificare.com/api/v1";
 
     const ENDPOINT_NOTIFICATIONS = "/notifications";
     const ENDPOINT_PLAYERS = "/players";
@@ -41,7 +41,7 @@ class OneSignalClient
     }
 
     /**
-     * Callback to execute after OneSignal returns the response
+     * Callback to execute after Notificare returns the response
      * @param Callable $requestCallback
      * @return $this
      */
@@ -210,7 +210,7 @@ class OneSignalClient
 
     /**
      * Send a notification with custom parameters defined in
-     * https://documentation.onesignal.com/reference#section-example-code-create-notification
+     * https://documentation.notificare.com/reference#section-example-code-create-notification
      * @param array $parameters
      * @return mixed
      */

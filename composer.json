@@ -1,8 +1,8 @@
 {
-    "name": "notificare/onesignal-laravel",
-    "description": "OneSignal Push Wrapper Laravel",
+    "name": "notificare/notificare-laravel",
+    "description": "Notificare Push Wrapper Laravel",
     "keywords": [
-        "onesignal",
+        "notificare",
         "webpush",
         "push",
         "laravel",
@@ -20,7 +20,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Notificare\\OneSignal\\": "src/"
+            "Notificare\\Notificare\\": "src/"
         }
     },
     "license": "MIT",
