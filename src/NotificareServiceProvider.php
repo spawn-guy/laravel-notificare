@@ -18,7 +18,7 @@ class NotificareServiceProvider extends ServiceProvider
         $this->publishes([$configPath => config_path('notificare.php')], 'config');
         $this->mergeConfigFrom($configPath, 'notificare');
 
-        if ( class_exists('Laravel\Lumen\Application') ) {
+        if (class_exists('Laravel\Lumen\Application')) {
             $this->app->configure('notificare');
         }
     }
@@ -36,13 +36,14 @@ class NotificareServiceProvider extends ServiceProvider
                 $config = $app['config']['notificare'] ?: $app['config']['notificare::config'];
             }
 
-            $client = new NotificareClient($config['app_id'], $config['rest_api_key'], $config['user_auth_key']);
+            $client = new NotificareClient($config['applicationKey'], $config['masterSecret']);
 
             return $client;
         });
     }
 
-    public function provides() {
+    public function provides()
+    {
         return ['notificare'];
     }
 

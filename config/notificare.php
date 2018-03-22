@@ -1,23 +1,11 @@
 <?php
 
-return array(
+return [
     /*
 	|--------------------------------------------------------------------------
-	| One Signal App Id
+	| Notificare REST API
 	|--------------------------------------------------------------------------
-	|
-	|
 	*/
-    'app_id' => 'YOUR-APP-ID-HERE',
-
-    /*
-	|--------------------------------------------------------------------------
-	| Rest API Key
-	|--------------------------------------------------------------------------
-	|
-    |
-	|
-	*/
-    'rest_api_key' => 'YOUR-REST-API-KEY-HERE',
-    'user_auth_key' => 'YOUR-USER-AUTH-KEY'
-);
+    'applicationKey' => 'YOUR-APP-KEY-HERE',
+    'masterSecret' => 'YOUR-REST-API-KEY-HERE',
+];
