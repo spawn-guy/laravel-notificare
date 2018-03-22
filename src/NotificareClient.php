@@ -76,13 +76,13 @@ class NotificareClient
         ];
     }
 
-    public function addParams($params = [])
+    public function setAdditionalParams($params = [])
     {
         $this->additionalParams = $params;
         return $this;
     }
 
-    public function setParam($key, $value)
+    public function setAdditionalParam($key, $value)
     {
         $this->additionalParams[$key] = $value;
         return $this;
