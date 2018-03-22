@@ -3,19 +3,19 @@
 namespace Notificare\Notificare;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 
 class NotificareClient
 {
-    const API_URL = "https://notificare.com/api/v1";
+    const API_URL = 'https://push.notifica.re';
 
-    const ENDPOINT_NOTIFICATIONS = "/notifications";
-    const ENDPOINT_PLAYERS = "/players";
+    const ENDPOINT_NOTIFICATIONS = '/notifications';
+    const ENDPOINT_PLAYERS = '/players';
 
     protected $client;
-    protected $headers;
-    protected $appId;
-    protected $restApiKey;
-    protected $userAuthKey;
+    protected $options;
+    protected $applicationKey;
+    protected $masterSecret;
     protected $additionalParams;
 
     /**
@@ -51,50 +51,51 @@ class NotificareClient
         return $this;
     }
 
-    public function __construct($appId, $restApiKey, $userAuthKey)
+    public function __construct($applicationKey, $masterSecret)
     {
-        $this->appId = $appId;
-        $this->restApiKey = $restApiKey;
-        $this->userAuthKey = $userAuthKey;
+        $this->applicationKey = $applicationKey;
+        $this->masterSecret = $masterSecret;
 
-        $this->client = new Client();
-        $this->headers = ['headers' => []];
+        $this->client = new Client([
+            'base_uri' => self::API_URL,
+        ]);
+        $this->options = [];
         $this->additionalParams = [];
     }
 
-    public function testCredentials() {
-        return "APP ID: ".$this->appId." REST: ".$this->restApiKey;
+    public function testCredentials()
+    {
+        return 'APP KEY: ' . $this->applicationKey . ' SECRET: ' . $this->masterSecret;
     }
 
-    private function requiresAuth() {
-        $this->headers['headers']['Authorization'] = 'Basic '.$this->restApiKey;
-    }
-
-    private function usesJSON() {
-        $this->headers['headers']['Content-Type'] = 'application/json';
+    private function requiresAuth()
+    {
+        $this->options[RequestOptions::AUTH] = [
+            $this->applicationKey,
+            $this->masterSecret,
+        ];
     }
 
     public function addParams($params = [])
     {
         $this->additionalParams = $params;
-
         return $this;
     }
 
     public function setParam($key, $value)
     {
         $this->additionalParams[$key] = $value;
-
         return $this;
     }
 
-    public function sendNotificationToUser($message, $userId, $url = null, $data = null, $buttons = null, $schedule = null) {
+    public function sendNotificationToUser($message, $userId, $url = null, $data = null, $buttons = null, $schedule = null)
+    {
         $contents = array(
-            "en" => $message
+            'en' => $message
         );
 
         $params = array(
-            'app_id' => $this->appId,
+            'app_id' => $this->applicationKey,
             'contents' => $contents,
             'include_player_ids' => is_array($userId) ? $userId : array($userId)
         );
@@ -111,20 +112,21 @@ class NotificareClient
             $params['buttons'] = $buttons;
         }
 
-        if(isset($schedule)){
+        if (isset($schedule)) {
             $params['send_after'] = $schedule;
         }
 
         $this->sendNotificationCustom($params);
     }
 
-    public function sendNotificationUsingTags($message, $tags, $url = null, $data = null, $buttons = null, $schedule = null) {
+    public function sendNotificationUsingTags($message, $tags, $url = null, $data = null, $buttons = null, $schedule = null)
+    {
         $contents = array(
-            "en" => $message
+            'en' => $message
         );
 
         $params = array(
-            'app_id' => $this->appId,
+            'app_id' => $this->applicationKey,
             'contents' => $contents,
             'filters' => $tags,
         );
@@ -141,20 +143,21 @@ class NotificareClient
             $params['buttons'] = $buttons;
         }
 
-        if(isset($schedule)){
+        if (isset($schedule)) {
             $params['send_after'] = $schedule;
         }
 
         $this->sendNotificationCustom($params);
     }
 
-    public function sendNotificationToAll($message, $url = null, $data = null, $buttons = null, $schedule = null) {
+    public function sendNotificationToAll($message, $url = null, $data = null, $buttons = null, $schedule = null)
+    {
         $contents = array(
-            "en" => $message
+            'en' => $message
         );
 
         $params = array(
-            'app_id' => $this->appId,
+            'app_id' => $this->applicationKey,
             'contents' => $contents,
             'included_segments' => array('All')
         );
@@ -171,20 +174,21 @@ class NotificareClient
             $params['buttons'] = $buttons;
         }
 
-        if(isset($schedule)){
+        if (isset($schedule)) {
             $params['send_after'] = $schedule;
         }
 
         $this->sendNotificationCustom($params);
     }
 
-    public function sendNotificationToSegment($message, $segment, $url = null, $data = null, $buttons = null, $schedule = null) {
+    public function sendNotificationToSegment($message, $segment, $url = null, $data = null, $buttons = null, $schedule = null)
+    {
         $contents = array(
-            "en" => $message
+            'en' => $message
         );
 
         $params = array(
-            'app_id' => $this->appId,
+            'app_id' => $this->applicationKey,
             'contents' => $contents,
             'included_segments' => [$segment]
         );
@@ -201,7 +205,7 @@ class NotificareClient
             $params['buttons'] = $buttons;
         }
 
-        if(isset($schedule)){
+        if (isset($schedule)) {
             $params['send_after'] = $schedule;
         }
 
@@ -214,17 +218,17 @@ class NotificareClient
      * @param array $parameters
      * @return mixed
      */
-    public function sendNotificationCustom($parameters = []){
+    public function sendNotificationCustom($parameters = [])
+    {
         $this->requiresAuth();
-        $this->usesJSON();
 
         if (isset($parameters['api_key'])) {
-            $this->headers['headers']['Authorization'] = 'Basic '.$parameters['api_key'];
+            $this->options['headers']['Authorization'] = 'Basic ' . $parameters['api_key'];
         }
 
         // Make sure to use app_id
         if (!isset($parameters['app_id'])) {
-            $parameters['app_id'] = $this->appId;
+            $parameters['app_id'] = $this->applicationKey;
         }
 
         // Make sure to use included_segments
@@ -234,20 +238,22 @@ class NotificareClient
 
         $parameters = array_merge($parameters, $this->additionalParams);
 
-        $this->headers['body'] = json_encode($parameters);
-        $this->headers['buttons'] = json_encode($parameters);
-        $this->headers['verify'] = false;
+        $this->options[RequestOptions::JSON] = $parameters;
+        //$this->options['buttons'] = json_encode($parameters);//FIXME: ????
+        //$this->options[RequestOptions::VERIFY] = false;//FIXME: ???
+
         return $this->post(self::ENDPOINT_NOTIFICATIONS);
     }
 
-    public function getNotification($notification_id, $app_id = null) {
+    public function getNotification($notification_id, $app_id = null)
+    {
         $this->requiresAuth();
-        $this->usesJSON();
 
-        if(!$app_id)
-            $app_id = $this->appId;
+        if (!$app_id) {
+            $app_id = $this->applicationKey;
+        }
 
-        return $this->get(self::ENDPOINT_NOTIFICATIONS . '/'.$notification_id . '?app_id='.$app_id);
+        return $this->get(self::ENDPOINT_NOTIFICATIONS . '/' . $notification_id . '?app_id=' . $app_id);
     }
 
     /**
@@ -257,8 +263,9 @@ class NotificareClient
      * @return mixed
      * @throws \Exception
      */
-    public function createPlayer(Array $parameters) {
-        if(!isset($parameters['device_type']) or !is_numeric($parameters['device_type'])) {
+    public function createPlayer(Array $parameters)
+    {
+        if (!isset($parameters['device_type']) or !is_numeric($parameters['device_type'])) {
             throw new \Exception('The `device_type` param is required as integer to create a player(device)');
         }
         return $this->sendPlayer($parameters, 'POST', self::ENDPOINT_PLAYERS);
@@ -270,7 +277,8 @@ class NotificareClient
      * @param array $parameters
      * @return mixed
      */
-    public function editPlayer(Array $parameters) {
+    public function editPlayer(Array $parameters)
+    {
         return $this->sendPlayer($parameters, 'PUT', self::ENDPOINT_PLAYERS . '/' . $parameters['id']);
     }
 
@@ -285,32 +293,34 @@ class NotificareClient
     private function sendPlayer(Array $parameters, $method, $endpoint)
     {
         $this->requiresAuth();
-        $this->usesJSON();
 
-        $parameters['app_id'] = $this->appId;
-        $this->headers['body'] = json_encode($parameters);
+        $parameters['app_id'] = $this->applicationKey;
+        $this->options[RequestOptions::JSON] = $parameters;
 
         $method = strtolower($method);
         return $this->{$method}($endpoint);
     }
 
-    public function post($endPoint) {
-        if($this->requestAsync === true) {
-            $promise = $this->client->postAsync(self::API_URL . $endPoint, $this->headers);
+    public function post($endPoint)
+    {
+        if ($this->requestAsync === true) {
+            $promise = $this->client->postAsync($endPoint, $this->options);
             return (is_callable($this->requestCallback) ? $promise->then($this->requestCallback) : $promise);
         }
-        return $this->client->post(self::API_URL . $endPoint, $this->headers);
+        return $this->client->post($endPoint, $this->options);
     }
 
-    public function put($endPoint) {
-        if($this->requestAsync === true) {
-            $promise = $this->client->putAsync(self::API_URL . $endPoint, $this->headers);
+    public function put($endPoint)
+    {
+        if ($this->requestAsync === true) {
+            $promise = $this->client->putAsync($endPoint, $this->options);
             return (is_callable($this->requestCallback) ? $promise->then($this->requestCallback) : $promise);
         }
-        return $this->client->put(self::API_URL . $endPoint, $this->headers);
+        return $this->client->put($endPoint, $this->options);
     }
 
-    public function get($endPoint) {
-        return $this->client->get(self::API_URL . $endPoint, $this->headers);
+    public function get($endPoint)
+    {
+        return $this->client->get($endPoint, $this->options);
     }
 }
