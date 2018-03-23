@@ -36,7 +36,7 @@ class NotificareServiceProvider extends ServiceProvider
                 $config = $app['config']['notificare'] ?: $app['config']['notificare::config'];
             }
 
-            $client = new NotificareClient($config['applicationKey'], $config['masterSecret']);
+            $client = new NotificareClient($config);
 
             return $client;
         });

@@ -12,10 +12,9 @@ class NotificareClient
     const ENDPOINT_NOTIFICATIONS = '/notifications';
     const ENDPOINT_PLAYERS = '/players';
 
+    protected $config;
     protected $client;
     protected $options;
-    protected $applicationKey;
-    protected $masterSecret;
     protected $additionalParams;
 
     /**
@@ -51,10 +50,13 @@ class NotificareClient
         return $this;
     }
 
-    public function __construct($applicationKey, $masterSecret)
+    /**
+     * NotificareClient constructor.
+     * @param array $config
+     */
+    public function __construct(array $config)
     {
-        $this->applicationKey = $applicationKey;
-        $this->masterSecret = $masterSecret;
+        $this->config = $config;
 
         $this->client = new Client([
             'base_uri' => self::API_URL,
@@ -65,14 +67,19 @@ class NotificareClient
 
     public function testCredentials()
     {
-        return 'APP KEY: ' . $this->applicationKey . ' SECRET: ' . $this->masterSecret;
+        return 'config: ' . json_encode($this->config);
+    }
+
+    private function configGet($field, $default = null)
+    {
+        return array_get($this->config, $field, $default);
     }
 
     private function requiresAuth()
     {
         $this->options[RequestOptions::AUTH] = [
-            $this->applicationKey,
-            $this->masterSecret,
+            $this->configGet('applicationKey'),
+            $this->configGet('masterSecret'),
         ];
     }
 
@@ -95,7 +102,7 @@ class NotificareClient
         );
 
         $params = array(
-            'app_id' => $this->applicationKey,
+            'app_id' => $this->configGet('applicationKey'),
             'contents' => $contents,
             'include_player_ids' => is_array($userId) ? $userId : array($userId)
         );
@@ -126,7 +133,7 @@ class NotificareClient
         );
 
         $params = array(
-            'app_id' => $this->applicationKey,
+            'app_id' => $this->configGet('applicationKey'),
             'contents' => $contents,
             'filters' => $tags,
         );
@@ -157,7 +164,7 @@ class NotificareClient
         );
 
         $params = array(
-            'app_id' => $this->applicationKey,
+            'app_id' => $this->configGet('applicationKey'),
             'contents' => $contents,
             'included_segments' => array('All')
         );
@@ -188,7 +195,7 @@ class NotificareClient
         );
 
         $params = array(
-            'app_id' => $this->applicationKey,
+            'app_id' => $this->configGet('applicationKey'),
             'contents' => $contents,
             'included_segments' => [$segment]
         );
@@ -228,7 +235,7 @@ class NotificareClient
 
         // Make sure to use app_id
         if (!isset($parameters['app_id'])) {
-            $parameters['app_id'] = $this->applicationKey;
+            $parameters['app_id'] = $this->configGet('applicationKey');
         }
 
         // Make sure to use included_segments
@@ -250,7 +257,7 @@ class NotificareClient
         $this->requiresAuth();
 
         if (!$app_id) {
-            $app_id = $this->applicationKey;
+            $app_id = $this->configGet('applicationKey');
         }
 
         return $this->get(self::ENDPOINT_NOTIFICATIONS . '/' . $notification_id . '?app_id=' . $app_id);
@@ -294,7 +301,7 @@ class NotificareClient
     {
         $this->requiresAuth();
 
-        $parameters['app_id'] = $this->applicationKey;
+        $parameters['app_id'] = $this->configGet('applicationKey');
         $this->options[RequestOptions::JSON] = $parameters;
 
         $method = strtolower($method);
