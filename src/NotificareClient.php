@@ -9,12 +9,15 @@ class NotificareClient
 {
     const API_URL = 'https://push.notifica.re';
 
-    const ENDPOINT_NOTIFICATIONS = '/notifications';
-    const ENDPOINT_PLAYERS = '/players';
+    const ENDPOINT_NOTIFY_DEVICE = '/device/';
+
+    const ENDPOINT_NOTIFY_ALL = '/notification/broadcast';
+    const ENDPOINT_NOTIFY_TAGS = '/notification/tags';
+    const ENDPOINT_NOTIFY_SEGMENTS = '/notification/segments';
+    const ENDPOINT_NOTIFY_CRITERIA = '/notification/criteria';
 
     protected $config;
     protected $client;
-    protected $options;
     protected $additionalParams;
 
     /**
@@ -61,7 +64,6 @@ class NotificareClient
         $this->client = new Client([
             'base_uri' => self::API_URL,
         ]);
-        $this->options = [];
         $this->additionalParams = [];
     }
 
@@ -75,12 +77,18 @@ class NotificareClient
         return array_get($this->config, $field, $default);
     }
 
-    private function requiresAuth()
+    /**
+     * @param array $options
+     * @return array
+     */
+    private function requiresAuthWithAppKeyMasterSecret($options = [])
     {
-        $this->options[RequestOptions::AUTH] = [
+        $options[RequestOptions::AUTH] = [
             $this->configGet('applicationKey'),
             $this->configGet('masterSecret'),
         ];
+
+        return $options;
     }
 
     public function setAdditionalParams($params = [])
@@ -95,239 +103,93 @@ class NotificareClient
         return $this;
     }
 
-    public function sendNotificationToUser($message, $userId, $url = null, $data = null, $buttons = null, $schedule = null)
+    /**
+     * @param array $notification
+     * @param string $deviceId
+     */
+    public function sendNotificationToDevice($notification, $deviceId)
     {
-        $contents = array(
-            'en' => $message
-        );
-
-        $params = array(
-            'app_id' => $this->configGet('applicationKey'),
-            'contents' => $contents,
-            'include_player_ids' => is_array($userId) ? $userId : array($userId)
-        );
-
-        if (isset($url)) {
-            $params['url'] = $url;
-        }
-
-        if (isset($data)) {
-            $params['data'] = $data;
-        }
-
-        if (isset($buttons)) {
-            $params['buttons'] = $buttons;
-        }
-
-        if (isset($schedule)) {
-            $params['send_after'] = $schedule;
-        }
-
-        $this->sendNotificationCustom($params);
-    }
-
-    public function sendNotificationUsingTags($message, $tags, $url = null, $data = null, $buttons = null, $schedule = null)
-    {
-        $contents = array(
-            'en' => $message
-        );
-
-        $params = array(
-            'app_id' => $this->configGet('applicationKey'),
-            'contents' => $contents,
-            'filters' => $tags,
-        );
-
-        if (isset($url)) {
-            $params['url'] = $url;
-        }
-
-        if (isset($data)) {
-            $params['data'] = $data;
-        }
-
-        if (isset($buttons)) {
-            $params['buttons'] = $buttons;
-        }
-
-        if (isset($schedule)) {
-            $params['send_after'] = $schedule;
-        }
-
-        $this->sendNotificationCustom($params);
-    }
-
-    public function sendNotificationToAll($message, $url = null, $data = null, $buttons = null, $schedule = null)
-    {
-        $contents = array(
-            'en' => $message
-        );
-
-        $params = array(
-            'app_id' => $this->configGet('applicationKey'),
-            'contents' => $contents,
-            'included_segments' => array('All')
-        );
-
-        if (isset($url)) {
-            $params['url'] = $url;
-        }
-
-        if (isset($data)) {
-            $params['data'] = $data;
-        }
-
-        if (isset($buttons)) {
-            $params['buttons'] = $buttons;
-        }
-
-        if (isset($schedule)) {
-            $params['send_after'] = $schedule;
-        }
-
-        $this->sendNotificationCustom($params);
-    }
-
-    public function sendNotificationToSegment($message, $segment, $url = null, $data = null, $buttons = null, $schedule = null)
-    {
-        $contents = array(
-            'en' => $message
-        );
-
-        $params = array(
-            'app_id' => $this->configGet('applicationKey'),
-            'contents' => $contents,
-            'included_segments' => [$segment]
-        );
-
-        if (isset($url)) {
-            $params['url'] = $url;
-        }
-
-        if (isset($data)) {
-            $params['data'] = $data;
-        }
-
-        if (isset($buttons)) {
-            $params['buttons'] = $buttons;
-        }
-
-        if (isset($schedule)) {
-            $params['send_after'] = $schedule;
-        }
-
-        $this->sendNotificationCustom($params);
+        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_DEVICE . (string)$deviceId);
     }
 
     /**
-     * Send a notification with custom parameters defined in
-     * https://documentation.notificare.com/reference#section-example-code-create-notification
-     * @param array $parameters
-     * @return mixed
+     * @param array $notification
      */
-    public function sendNotificationCustom($parameters = [])
+    public function sendNotificationToAll($notification)
     {
-        $this->requiresAuth();
-
-        if (isset($parameters['api_key'])) {
-            $this->options['headers']['Authorization'] = 'Basic ' . $parameters['api_key'];
-        }
-
-        // Make sure to use app_id
-        if (!isset($parameters['app_id'])) {
-            $parameters['app_id'] = $this->configGet('applicationKey');
-        }
-
-        // Make sure to use included_segments
-        if (empty($parameters['included_segments']) && empty($parameters['include_player_ids'])) {
-            $parameters['included_segments'] = ['all'];
-        }
-
-        $parameters = array_merge($parameters, $this->additionalParams);
-
-        $this->options[RequestOptions::JSON] = $parameters;
-        //$this->options['buttons'] = json_encode($parameters);//FIXME: ????
-        //$this->options[RequestOptions::VERIFY] = false;//FIXME: ???
-
-        return $this->post(self::ENDPOINT_NOTIFICATIONS);
-    }
-
-    public function getNotification($notification_id, $app_id = null)
-    {
-        $this->requiresAuth();
-
-        if (!$app_id) {
-            $app_id = $this->configGet('applicationKey');
-        }
-
-        return $this->get(self::ENDPOINT_NOTIFICATIONS . '/' . $notification_id . '?app_id=' . $app_id);
+        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_ALL);
     }
 
     /**
-     * Creates a user/player
-     *
-     * @param array $parameters
-     * @return mixed
-     * @throws \Exception
+     * @param array $notification
+     * @param string|array $tags
      */
-    public function createPlayer(Array $parameters)
+    public function sendNotificationToTags($notification, $tags)
     {
-        if (!isset($parameters['device_type']) or !is_numeric($parameters['device_type'])) {
-            throw new \Exception('The `device_type` param is required as integer to create a player(device)');
-        }
-        return $this->sendPlayer($parameters, 'POST', self::ENDPOINT_PLAYERS);
+        $notification['tags'] = (array)$tags;
+
+        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_TAGS);
     }
 
     /**
-     * Edit a user/player
-     *
-     * @param array $parameters
-     * @return mixed
+     * @param array $notification
+     * @param string|array $segments
      */
-    public function editPlayer(Array $parameters)
+    public function sendNotificationToSegments($notification, $segments)
     {
-        return $this->sendPlayer($parameters, 'PUT', self::ENDPOINT_PLAYERS . '/' . $parameters['id']);
+        $notification['segments'] = (array)$segments;
+
+        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_SEGMENTS);
     }
 
     /**
-     * Create or update a by $method value
-     *
-     * @param array $parameters
-     * @param $method
-     * @param $endpoint
-     * @return mixed
+     * @param array $notification
+     * @param array $criteria
      */
-    private function sendPlayer(Array $parameters, $method, $endpoint)
+    public function sendNotificationToCriteria($notification, $criteria)
     {
-        $this->requiresAuth();
+        $notification['criteria'] = $criteria;
 
-        $parameters['app_id'] = $this->configGet('applicationKey');
-        $this->options[RequestOptions::JSON] = $parameters;
-
-        $method = strtolower($method);
-        return $this->{$method}($endpoint);
+        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_CRITERIA);
     }
 
-    public function post($endPoint)
+    /**
+     * Send a notification with custom parameters
+     * @param array $payload
+     * @param string $uri
+     * @return mixed
+     */
+    public function sendNotificationRaw($payload, $uri)
+    {
+        $request = $this->requiresAuthWithAppKeyMasterSecret();
+
+        $request = array_merge($request, $this->additionalParams);
+
+        $request[RequestOptions::JSON] = $payload;
+
+        return $this->post($uri, $request);
+    }
+
+    public function post($endPoint, $request)
     {
         if ($this->requestAsync === true) {
-            $promise = $this->client->postAsync($endPoint, $this->options);
+            $promise = $this->client->postAsync($endPoint, $request);
             return (is_callable($this->requestCallback) ? $promise->then($this->requestCallback) : $promise);
         }
-        return $this->client->post($endPoint, $this->options);
+        return $this->client->post($endPoint, $request);
     }
 
-    public function put($endPoint)
+    public function put($endPoint, $request)
     {
         if ($this->requestAsync === true) {
-            $promise = $this->client->putAsync($endPoint, $this->options);
+            $promise = $this->client->putAsync($endPoint, $request);
             return (is_callable($this->requestCallback) ? $promise->then($this->requestCallback) : $promise);
         }
-        return $this->client->put($endPoint, $this->options);
+        return $this->client->put($endPoint, $request);
     }
 
-    public function get($endPoint)
+    public function get($endPoint, $request)
     {
-        return $this->client->get($endPoint, $this->options);
+        return $this->client->get($endPoint, $request);
     }
 }
