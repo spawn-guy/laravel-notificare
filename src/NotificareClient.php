@@ -109,51 +109,56 @@ class NotificareClient
     /**
      * @param array $notification
      * @param string $deviceId
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
     public function sendNotificationToDevice($notification, $deviceId)
     {
-        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_DEVICE . (string)$deviceId);
+        return $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_DEVICE . (string)$deviceId);
     }
 
     /**
      * @param array $notification
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
     public function sendNotificationToAll($notification)
     {
-        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_ALL);
+        return $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_ALL);
     }
 
     /**
      * @param array $notification
      * @param string|array $tags
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
     public function sendNotificationToTags($notification, $tags)
     {
         $notification['tags'] = (array)$tags;
 
-        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_TAGS);
+        return $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_TAGS);
     }
 
     /**
      * @param array $notification
      * @param string|array $segments
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
     public function sendNotificationToSegments($notification, $segments)
     {
         $notification['segments'] = (array)$segments;
 
-        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_SEGMENTS);
+        return $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_SEGMENTS);
     }
 
     /**
      * @param array $notification
      * @param array $criteria
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
     public function sendNotificationToCriteria($notification, $criteria)
     {
         $notification['criteria'] = $criteria;
 
-        $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_CRITERIA);
+        return $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_CRITERIA);
     }
 
     /**
