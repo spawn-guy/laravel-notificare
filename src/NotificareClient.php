@@ -168,15 +168,9 @@ class NotificareClient
     {
         $result = $this->sendNotificationRaw($payload, $uri);
 
-        $responseData = json_decode($result->getBody()->getContents(), true);
-
-        if (($payload['scheduled'] === true) && !empty($responseData['_id'])) {
-            $payloadSchedule = [
-                'notification' => $responseData['_id'],
-                'time' => Carbon::parse($when)->toDateTimeString(),
-                'local' => $local,
-            ];
-            $this->sendNotificationRaw($payloadSchedule, self::ENDPOINT_NOTIFY_SCHEDULE);
+        $resultData = self::getResponseData($result);
+        if (!empty($resultData['_id'])) {
+            $this->scheduleNotification($resultData['_id'], $when, $local);
         }
 
         return $result;
@@ -235,5 +229,36 @@ class NotificareClient
     public function get($endPoint, $request)
     {
         return $this->client->get($endPoint, $request);
+    }
+
+    /**
+     * @param string $notification_id
+     * @param string $when
+     * @param bool $local
+     * @return bool|\GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    protected function scheduleNotification($notification_id, $when, $local)
+    {
+        $notification_id = (string)$notification_id;
+
+        if (!empty($notification_id)) {
+            $payloadSchedule = [
+                'notification' => $notification_id,
+                'time' => Carbon::parse($when)->toDateTimeString(),
+                'local' => $local,
+            ];
+            return $this->sendNotificationRaw($payloadSchedule, self::ENDPOINT_NOTIFY_SCHEDULE);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param \Psr\Http\Message\ResponseInterface $result
+     * @return mixed
+     */
+    public static function getResponseData($result)
+    {
+        return json_decode($result->getBody()->getContents(), true);
     }
 }
