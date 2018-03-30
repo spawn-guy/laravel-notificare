@@ -2,6 +2,7 @@
 
 namespace Notificare\Notificare;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 
@@ -15,6 +16,8 @@ class NotificareClient
     const ENDPOINT_NOTIFY_TAGS = '/notification/tags';
     const ENDPOINT_NOTIFY_SEGMENTS = '/notification/segments';
     const ENDPOINT_NOTIFY_CRITERIA = '/notification/criteria';
+
+    const ENDPOINT_NOTIFY_SCHEDULE = '/notification/schedule';
 
     protected $config;
     protected $client;
@@ -156,8 +159,34 @@ class NotificareClient
     /**
      * Send a notification with custom parameters
      * @param array $payload
+     * @param string|Carbon $when
+     * @param boolean $local
      * @param string $uri
-     * @return mixed
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendNotificationScheduled($payload, $when = 'now', $local = false, $uri)
+    {
+        $result = $this->sendNotificationRaw($payload, $uri);
+
+        $responseData = json_decode($result->getBody()->getContents(), true);
+
+        if (($payload['scheduled'] === true) && !empty($responseData['_id'])) {
+            $payloadSchedule = [
+                'notification' => $responseData['_id'],
+                'time' => Carbon::parse($when)->toDateTimeString(),
+                'local' => $local,
+            ];
+            $this->sendNotificationRaw($payloadSchedule, self::ENDPOINT_NOTIFY_SCHEDULE);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Send a notification with custom parameters
+     * @param array $payload
+     * @param string $uri
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
     public function sendNotificationRaw($payload, $uri)
     {
@@ -170,6 +199,11 @@ class NotificareClient
         return $this->post($uri, $request);
     }
 
+    /**
+     * @param $endPoint
+     * @param $request
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
     public function post($endPoint, $request)
     {
         if ($this->requestAsync === true) {
@@ -179,6 +213,11 @@ class NotificareClient
         return $this->client->post($endPoint, $request);
     }
 
+    /**
+     * @param $endPoint
+     * @param $request
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
     public function put($endPoint, $request)
     {
         if ($this->requestAsync === true) {
@@ -188,6 +227,11 @@ class NotificareClient
         return $this->client->put($endPoint, $request);
     }
 
+    /**
+     * @param $endPoint
+     * @param $request
+     * @return \Psr\Http\Message\ResponseInterface
+     */
     public function get($endPoint, $request)
     {
         return $this->client->get($endPoint, $request);
