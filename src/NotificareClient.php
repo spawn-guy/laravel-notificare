@@ -242,14 +242,14 @@ class NotificareClient
      * @param bool $local
      * @return bool|\GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
-    public function scheduleNotification($notification_id, $when, $local)
+    public function scheduleNotification($notification_id, $when, $local = false)
     {
         $notification_id = (string)$notification_id;
 
         if (!empty($notification_id)) {
             $payloadSchedule = [
                 'notification' => $notification_id,
-                'time' => Carbon::parse($when)->toDateTimeString(),
+                'time' => Carbon::parse($when)->setTimezone('UTC')->toDateTimeString(),
                 'local' => $local,
             ];
             return $this->sendNotificationRaw($payloadSchedule, self::ENDPOINT_NOTIFY_SCHEDULE);
