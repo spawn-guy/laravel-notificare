@@ -242,7 +242,7 @@ class NotificareClient
      * @param bool $local
      * @return bool|\GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
-    protected function scheduleNotification($notification_id, $when, $local)
+    public function scheduleNotification($notification_id, $when, $local)
     {
         $notification_id = (string)$notification_id;
 
