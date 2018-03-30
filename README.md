@@ -11,7 +11,7 @@ Before you start installing this service, please complete your Notificare setup 
 First, you'll need to require the package with Composer:
 
 ```sh
-composer require notificare/notificare-laravel
+composer require notificare/laravel-notificare
 ```
 
 Aftwards, run `composer update` from your command line.
@@ -21,7 +21,7 @@ Then, update `config/app.php` by adding an entry for the service provider.
 ```php
 'providers' => [
 	// ...
-	Notificare\Notificare\NotificareServiceProvider::class
+	Notificare\Notificare\NotificareServiceProvider::class,
 ];
 ```
 
@@ -31,7 +31,7 @@ Then, register class alias by adding an entry in aliases section
 ```php
 'aliases' => [
 	// ...
-	'Notificare' => Notificare\Notificare\NotificareFacade::class
+	'Notificare' => Notificare\Notificare\NotificareFacade::class,
 ];
 ```
 
