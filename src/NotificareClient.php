@@ -249,7 +249,7 @@ class NotificareClient
         if (!empty($notification_id)) {
             $payloadSchedule = [
                 'notification' => $notification_id,
-                'time' => Carbon::parse($when)->toDateTimeString(),
+                'time' => Carbon::parse($when)->format('Y-m-d H:i'),
                 'local' => $local,
             ];
             return $this->sendNotificationRaw($payloadSchedule, self::ENDPOINT_NOTIFY_SCHEDULE);
