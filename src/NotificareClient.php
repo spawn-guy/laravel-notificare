@@ -11,11 +11,13 @@ class NotificareClient
     const API_URL = 'https://push.notifica.re';
 
     const ENDPOINT_NOTIFY_DEVICE = '/device/';
+    const ENDPOINT_NOTIFY_SYSTEM_DEVICE = '/notification/system/device/';
 
     const ENDPOINT_NOTIFY_ALL = '/notification/broadcast';
     const ENDPOINT_NOTIFY_TAGS = '/notification/tags';
     const ENDPOINT_NOTIFY_SEGMENTS = '/notification/segments';
     const ENDPOINT_NOTIFY_CRITERIA = '/notification/criteria';
+    const ENDPOINT_NOTIFY_SYSTEM = '/notification/system';
 
     const ENDPOINT_NOTIFY_SCHEDULE = '/notification/schedule';
 
@@ -265,5 +267,83 @@ class NotificareClient
     public static function getResponseData($result)
     {
         return json_decode($result->getBody()->getContents(), true);
+    }
+
+    /**
+     * @param array $notification
+     * @param string $deviceId
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendSystemNotificationToDevice($notification, $deviceId)
+    {
+        return $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_SYSTEM_DEVICE . (string)$deviceId);
+    }
+
+    /**
+     * @param array $notification
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendSystemNotification($notification)
+    {
+        $notification['type'] = 'com.domain.system.notification';
+
+        return $this->sendNotificationRaw($notification, self::ENDPOINT_NOTIFY_SYSTEM);
+    }
+
+    /**
+     * @param array $notification
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendSystemNotificationToAll($notification)
+    {
+        return $this->sendSystemNotification($notification);
+    }
+
+    /**
+     * @param array $notification
+     * @param string|array $tags
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendSystemNotificationToTags($notification, $tags)
+    {
+        $notification['tags'] = (array)$tags;
+
+        return $this->sendSystemNotification($notification);
+    }
+
+    /**
+     * @param array $notification
+     * @param string|array $segments
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendSystemNotificationToSegments($notification, $segments)
+    {
+        $notification['segments'] = (array)$segments;
+
+        return $this->sendSystemNotification($notification);
+    }
+
+    /**
+     * @param array $notification
+     * @param array $criteria
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendSystemNotificationToCriteria($notification, $criteria)
+    {
+        $notification['criteria'] = $criteria;
+
+        return $this->sendSystemNotification($notification);
+    }
+
+    /**
+     * @param array $notification
+     * @param array $location
+     * @return \GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function sendSystemNotificationToLocation($notification, $location)
+    {
+        $notification['location'] = $location;
+
+        return $this->sendSystemNotification($notification);
     }
 }
