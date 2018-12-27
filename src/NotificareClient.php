@@ -229,13 +229,23 @@ class NotificareClient
     }
 
     /**
-     * @param $endPoint
-     * @param $request
+     * @param string|\Psr\Http\Message\UriInterface $uri
+     * @param array $options
      * @return \Psr\Http\Message\ResponseInterface
      */
-    public function get($endPoint, $request)
+    public function get($uri, $options = [])
     {
-        return $this->client->get($endPoint, $request);
+        return $this->client->get($uri, $options);
+    }
+
+    /**
+     * @param string|\Psr\Http\Message\UriInterface $uri
+     * @param array $options
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function delete($uri, $options = [])
+    {
+        return $this->client->delete($uri, $options);
     }
 
     /**
@@ -255,6 +265,51 @@ class NotificareClient
                 'local' => $local,
             ];
             return $this->sendNotificationRaw($payloadSchedule, self::ENDPOINT_NOTIFY_SCHEDULE);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $schedule_id
+     * @return bool|\GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function getSchedule($schedule_id)
+    {
+        $schedule_id = (string)$schedule_id;
+
+        if (!empty($schedule_id)) {
+            return self::getResponseData($this->get(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id));
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $schedule_id
+     * @return bool|\GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function updateSchedule($schedule_id, $data)
+    {
+        $schedule_id = (string)$schedule_id;
+
+        if (!empty($schedule_id)) {
+            return self::getResponseData($this->put(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id, $data));
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $schedule_id
+     * @return bool|\GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
+     */
+    public function cancelSchedule($schedule_id)
+    {
+        $schedule_id = (string)$schedule_id;
+
+        if (!empty($schedule_id)) {
+            return self::getResponseData($this->delete(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id));
         }
 
         return false;
