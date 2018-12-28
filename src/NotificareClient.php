@@ -235,6 +235,10 @@ class NotificareClient
      */
     public function get($uri, $options = [])
     {
+        if ($this->requestAsync === true) {
+            $promise = $this->client->getAsync($uri, $options);
+            return (is_callable($this->requestCallback) ? $promise->then($this->requestCallback) : $promise);
+        }
         return $this->client->get($uri, $options);
     }
 
@@ -245,6 +249,10 @@ class NotificareClient
      */
     public function delete($uri, $options = [])
     {
+        if ($this->requestAsync === true) {
+            $promise = $this->client->deleteAsync($uri, $options);
+            return (is_callable($this->requestCallback) ? $promise->then($this->requestCallback) : $promise);
+        }
         return $this->client->delete($uri, $options);
     }
 
@@ -279,7 +287,9 @@ class NotificareClient
         $schedule_id = (string)$schedule_id;
 
         if (!empty($schedule_id)) {
-            return self::getResponseData($this->get(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id));
+            $options = $this->requiresAuthWithAppKeyMasterSecret();
+            $options = array_merge($options, $this->additionalParams);
+            return self::getResponseData($this->get(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id, $options))['schedule'];
         }
 
         return false;
@@ -287,6 +297,7 @@ class NotificareClient
 
     /**
      * @param string $schedule_id
+     * @param array $data
      * @return bool|\GuzzleHttp\Promise\PromiseInterface|\Psr\Http\Message\ResponseInterface
      */
     public function updateSchedule($schedule_id, $data)
@@ -294,7 +305,11 @@ class NotificareClient
         $schedule_id = (string)$schedule_id;
 
         if (!empty($schedule_id)) {
-            return self::getResponseData($this->put(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id, $data));
+            $options = $this->requiresAuthWithAppKeyMasterSecret();
+            $options = array_merge($options, $this->additionalParams);
+            $options[RequestOptions::JSON] = $data;
+
+            return self::getResponseData($this->put(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id, $options));
         }
 
         return false;
@@ -309,7 +324,9 @@ class NotificareClient
         $schedule_id = (string)$schedule_id;
 
         if (!empty($schedule_id)) {
-            return self::getResponseData($this->delete(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id));
+            $options = $this->requiresAuthWithAppKeyMasterSecret();
+            $options = array_merge($options, $this->additionalParams);
+            return self::getResponseData($this->delete(self::ENDPOINT_NOTIFY_SCHEDULE . '/' . $schedule_id, $options));
         }
 
         return false;
